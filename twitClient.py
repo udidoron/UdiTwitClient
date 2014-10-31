@@ -13,7 +13,9 @@ def getJSONData(session, url, options):
     return data.json()
 
 #TODO add input checks for 'count' option
-def getOptions(include_rts_option=None):
+def getOptions(include_rts_option=None, options_specified=None):
+    if options_specified != None:
+        print len(options_specified)
     default_options = {'count': 20,
                        'exclude_replies': True}
     if include_rts_option == True:
@@ -31,10 +33,7 @@ def getOptions(include_rts_option=None):
         selected_options = options
     return selected_options
 
-
-def viewMyTweets(session):
-    selected_options = getOptions(include_rts_option=True)
-    data = getJSONData(session,"statuses/user_timeline.json",selected_options)
+def printTweets(data):
     print "Printing tweets.."
     for i, tweet in enumerate(data, 1):
         handle=tweet["user"]["screen_name"]
@@ -42,8 +41,15 @@ def viewMyTweets(session):
         print(u'{0}. {1} - {2}'.format(i, handle, text))
     print "\n Done printing tweets."
 
+def viewMyTweets(session):
+    selected_options = getOptions(include_rts_option=True, options_specified={"a":1, "b":4})
+    data = getJSONData(session,"statuses/user_timeline.json",selected_options)
+    printTweets(data)
+
 def viewMyTimeline(session):
-    print "Sorry, not implemented yet :("
+    selected_options = getOptions(include_rts_option=True)
+    data = getJSONData(session, "statuses/home_timeline.json", selected_options)
+    printTweets(data)
 
 def viewMyDms(session):
     print "No DMs for you! Come back - one year!"
