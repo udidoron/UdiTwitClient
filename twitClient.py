@@ -12,20 +12,35 @@ def getJSONData(session, url, options):
     data = session.get(url, params=options)
     return data.json()
 
-def viewMyTweets(session):
-    default_options = {'include_rts': True,
-                       'count': 20,
+#TODO add input checks for 'count' option
+def getOptions(include_rts_option=None):
+    default_options = {'count': 20,
                        'exclude_replies': True}
+    if include_rts_option == True:
+        default_options['include_rts'] = True
+    selected_options = None
     use_defaults=raw_input("Would you like to use the default options? (With RTs, 20 tweets, no replies) Y/N\n")
     if use_defaults.lower() == "y":
-        data = getJSONData(session,"statuses/user_timeline.json",default_options)
-        print "Printing tweets.."
-        for i, tweet in enumerate(data, 1):
-            handle=tweet["user"]["screen_name"]
-            text=tweet["text"]
-            print(u'{0}. {1} - {2}'.format(i, handle, text))
+        selected_options = default_options
     else:
-        print "Sorry, not yet implemented"
+        options = {}
+        if include_rts_option == True:
+            options['include_rts'] = True if raw_input("Include retweets (RTs)? Y/N\n").lower() == "y" else False
+        options['count'] = int(raw_input("Number of tweets to show?\n"))
+        options['exclude_replies'] = True if raw_input('Exclude replies? Y/N\n').lower() == "y" else False
+        selected_options = options
+    return selected_options
+
+
+def viewMyTweets(session):
+    selected_options = getOptions(include_rts_option=True)
+    data = getJSONData(session,"statuses/user_timeline.json",selected_options)
+    print "Printing tweets.."
+    for i, tweet in enumerate(data, 1):
+        handle=tweet["user"]["screen_name"]
+        text=tweet["text"]
+        print(u'{0}. {1} - {2}'.format(i, handle, text))
+    print "\n Done printing tweets."
 
 def viewMyTimeline(session):
     print "Sorry, not implemented yet :("
@@ -61,14 +76,14 @@ request_token, request_token_secret = twitter.get_request_token()
 authorize_url = twitter.get_authorize_url(request_token)
 
 print('Visit this URL in your browser: {url}'.format(url=authorize_url))
-pin = read_input('Enter PIN from browser: ')
+pin = raw_input('Enter PIN from browser: ')
 
 session = twitter.get_auth_session(request_token,
     request_token_secret,
     method='POST',
     data={'oauth_verifier': pin})
 
-print "Done getting Twitter sessions."
+print "Done getting Twitter session."
 
 while toQuit == False:
     print "What would you like to do?"
@@ -80,6 +95,7 @@ while toQuit == False:
     choice = raw_input("Enter choice\n")
     if choice.lower() == "q": #wish Python had switch-case..
         toQuit=True
+        print "Thanks for using UdiTwitClient!"
     elif choice == "1":
         viewRecent("tweets", session)
     elif choice == "2":
